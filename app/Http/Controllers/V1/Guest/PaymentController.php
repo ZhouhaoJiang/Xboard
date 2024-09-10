@@ -19,10 +19,7 @@ class PaymentController extends Controller
             $paymentService = new PaymentService($method, null, $uuid);
             // judge if EPay
             if ($method === 'EPay') {
-                // 取出form數據
-                 $body = $request->getContent();
-                 parse_str($body, $params);
-                 $paymentService->notify($params);
+                 $paymentService->notify($request->query());
             } else {
                 $verify = $paymentService->notify($request->input());
             }
