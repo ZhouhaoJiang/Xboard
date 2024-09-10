@@ -56,10 +56,6 @@ class EPay
     public function notify($params)
     {
         $sign = $params['sign'];
-        if (!isset($params['sign'])) {
-            return false;
-        }
-
         unset($params['sign']);
         unset($params['sign_type']);
         ksort($params);
