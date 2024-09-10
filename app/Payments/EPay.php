@@ -46,6 +46,7 @@ class EPay
         $str = stripslashes(urldecode(http_build_query($params))) . $this->config['key'];
         $params['sign'] = md5($str);
         $params['sign_type'] = 'MD5';
+        $params['type'] = 'alipay';
         return [
             'type' => 1, // 0:qrcode 1:url
             'data' => $this->config['url'] . '/submit.php?' . http_build_query($params)
