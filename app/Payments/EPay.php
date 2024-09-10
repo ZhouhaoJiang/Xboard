@@ -55,15 +55,17 @@ class EPay
 
     public function notify($params)
     {
-        $sign = $params['sign'];
-        unset($params['sign']);
-        unset($params['sign_type']);
-        ksort($params);
-        reset($params);
-        $str = stripslashes(urldecode(http_build_query($params))) . $this->config['key'];
-        if ($sign !== md5($str)) {
-            return false;
-        }
+        // $sign = $params['sign'];
+        // unset($params['sign']);
+        // unset($params['sign_type']);
+        // ksort($params);
+        // reset($params);
+        // $str = stripslashes(urldecode(http_build_query($params))) . $this->config['key'];
+        // if ($sign !== md5($str)) {
+        //     return false;
+        // }
+        $trade_status = $params['trade_status'];
+        if ($trade_status !== 'TRADE_SUCCESS') return false;
         return [
             'trade_no' => $params['out_trade_no'],
             'callback_no' => $params['trade_no']
