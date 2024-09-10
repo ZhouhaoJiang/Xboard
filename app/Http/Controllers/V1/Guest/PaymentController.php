@@ -17,7 +17,15 @@ class PaymentController extends Controller
     {
         try {
             $paymentService = new PaymentService($method, null, $uuid);
-            $verify = $paymentService->notify($request->input());
+            // judge if EPay
+            if ($method === 'EPay') {
+                // 取出form數據
+                 $body = $request->getContent();
+                 parse_str($body, $params);
+                 $paymentService->notify($params);
+            } else {
+                $verify = $paymentService->notify($request->input());
+            }
             if (!$verify)
                 return $this->fail([422, 'verify error']);
             if (!$this->handle($verify['trade_no'], $verify['callback_no'])) {
