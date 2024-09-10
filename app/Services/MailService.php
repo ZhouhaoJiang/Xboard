@@ -6,6 +6,7 @@ use App\Jobs\SendEmailJob;
 use App\Models\User;
 use App\Utils\CacheKey;
 use Illuminate\Support\Facades\Cache;
+use PHPMailer\PHPMailer\PHPMailer;
 
 class MailService
 {
@@ -91,29 +92,70 @@ class MailService
             \Config::set('mail.from.address', admin_setting('email_from_address', config('mail.from.address')));
             \Config::set('mail.from.name', admin_setting('app_name', 'XBoard'));
         }
+
         $email = $params['email'];
         $subject = $params['subject'];
-        $params['template_name'] = 'mail.' . admin_setting('email_template', 'default') . '.' . $params['template_name'];
+        $templateName = 'mail.' . admin_setting('email_template', 'default') . '.' . $params['template_name'];
+        $templateValue = $params['template_value'];
+
         try {
-            \Mail::send(
-                $params['template_name'],
-                $params['template_value'],
-                function ($message) use ($email, $subject) {
-                    $message->to($email)->subject($subject);
-                }
-            );
+            // 服务器设置
+            $mail = new PHPMailer(true);
+            $mail->isSMTP();
+            $mail->Host = config('mail.host');
+            $mail->Port = config('mail.port');
+            $mail->SMTPSecure = config('mail.encryption');
+            $mail->SMTPAuth = true;
+            $mail->Username = config('mail.username');
+            $mail->Password = config('mail.password');
+
+            // 发件人设置
+            $mail->setFrom(config('mail.from.address'), config('mail.from.name'));
+            $mail->addAddress($email);
+
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+
+            // 使用 Blade 模板渲染邮件内容
+            $htmlBody = view($templateName, $templateValue)->render();
+            $mail->Body = $htmlBody;
+
+            $mail->send();
+            echo '邮件发送成功';
             $error = null;
-        } catch (\Exception $e) {
-            $error = $e->getMessage();
-        }
-        $log = [
-            'email' => $params['email'],
-            'subject' => $params['subject'],
-            'template_name' => $params['template_name'],
+            // 记录日志（成功情况）
+            $log = [
+                'email' => $email,
+                'subject' => $subject,
+            'template_name' => $templateName,
             'error' => $error,
             'config' => config('mail')
-        ];
-        \App\Models\MailLog::create($log);
-        return $log;
+            ];
+            \App\Models\MailLog::create($log);
+
+            return $log;
+            // \Mail::send(
+            //     $params['template_name'],
+            //     $params['template_value'],
+            //     function ($message) use ($email, $subject) {
+            //         $message->to($email)->subject($subject);
+            //     }
+            // );
+            // $error = null;
+        } catch (\Exception $e) {
+            $error = $e->getMessage();
+            echo "邮件发送失败: {$mail->ErrorInfo}";
+            // 记录日志（失败情况）
+            $log = [
+                'email' => $email,
+                'subject' => $subject,
+                'template_name' => $templateName,
+                'error' => $error,
+                'config' => config('mail')
+            ];
+            \App\Models\MailLog::create($log);
+
+            return $log;
+        }
     }
 }
