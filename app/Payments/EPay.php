@@ -39,14 +39,14 @@ class EPay
             'notify_url' => $order['notify_url'],
             'return_url' => $order['return_url'],
             'out_trade_no' => $order['trade_no'],
-            'pid' => $this->config['pid']
+            'pid' => $this->config['pid'],
+            'type' => 'alipay',
         ];
         ksort($params);
         reset($params);
         $str = stripslashes(urldecode(http_build_query($params))) . $this->config['key'];
         $params['sign'] = md5($str);
         $params['sign_type'] = 'MD5';
-        $params['type'] = 'alipay';
         return [
             'type' => 1, // 0:qrcode 1:url
             'data' => $this->config['url'] . '/submit.php?' . http_build_query($params)
